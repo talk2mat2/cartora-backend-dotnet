@@ -27,10 +27,12 @@
     <None Remove="Microsoft.Extensions.Options.DataAnnotations" />
     <None Remove="Newtonsoft.Json" />
     <None Remove="services\" />
+    <None Remove="Helpers\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="models\" />
     <Folder Include="services\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
 </Project>

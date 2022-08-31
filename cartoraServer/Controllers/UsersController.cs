@@ -7,8 +7,10 @@ using cartoraServer.Data;
 using cartoraServer;
 using cartoraServer.models;
 using Newtonsoft;
+using cartoraServer.Helpers;
 using cartoraServer.services;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -20,16 +22,20 @@ namespace cartoraServer.Controllers
     {
 
         private AContext db;
+        private UserServices _userServe;
 
-        public UsersController(AContext _db)
+        public UsersController(AContext _db,UserServices userSer)
         {
             db = _db;
+            _userServe = userSer;
         }
         // GET: api/values
+        [Authorize]
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<string> Get([FromHeader(Name = "Authorization")] string request)
         {
-            return new string[] { "value1", "value2" };
+            var user = (Users)HttpContext.Items["User"]!;
+            return new string[] { "value1", $"{user.email}" };
         }
 
         // GET api/values/5
@@ -57,7 +63,7 @@ namespace cartoraServer.Controllers
             if (IsexistUser!=null)
             { 
                 ResData Errorresponse = new ResData();
-                Errorresponse.message = $"A user with the email {request.email} is already exist";
+                Errorresponse.message = $"A user with the email {request.email} already exist";
                 Errorresponse.status = false;
                 return BadRequest(Errorresponse);
             }
@@ -99,11 +105,14 @@ namespace cartoraServer.Controllers
                 bool verifyPass= SecurePasswordHasher.Verify(request.password,Isexist.password);
                 if (verifyPass)
                 {
+
+                    string Token = _userServe.generateJwtToken(Isexist);
+                    AuthResponse userSuccess = new AuthResponse(Isexist, Token);
                     ResData response = new ResData();
                     response.message = "Logged In successfull";
                     response.status = true; 
                    Console.WriteLine(ModelState.IsValid);
-                    response.data.Add(request);
+                    response.data.Add(userSuccess);
                     return Ok(response);
                 }
                 else

@@ -1,6 +1,9 @@
-﻿using cartoraServer.Data;
+﻿using cartoraServer;
+using cartoraServer.Data;
+using cartoraServer.services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using cartoraServer.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +17,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<AContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+builder.Services.AddScoped<UserServices>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -28,6 +32,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+app.UseMiddleware<JwtMiddleware>();
 app.MapControllers();
 
 app.Run();

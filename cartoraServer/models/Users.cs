@@ -17,7 +17,7 @@ namespace cartoraServer.models
         [Required]
         public string email { get; set; } = string.Empty;
         public string? country { get; set; } = string.Empty;
-        public DateTime? createdAt { get; set; } = new DateTime();
+        public DateTime createdAt { get; set; } = DateTime.Now;
         public string? profileImage { get; set; } = string.Empty;
         [Required]
         public string password { get; set; } = "";
