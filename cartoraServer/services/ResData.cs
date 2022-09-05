@@ -1,11 +1,11 @@
 ﻿using System;
 namespace cartoraServer.services
 {
-    public class ResData
+    public class ResData<t>
     {
         public string message { get; set; } = "";
         public bool status { get; set; } = false;
-        public List<dynamic> data { get; set; } = new List<dynamic>(){};
+        public List<t> data { get; set; } = new List<t>(){};
     }
     
 }

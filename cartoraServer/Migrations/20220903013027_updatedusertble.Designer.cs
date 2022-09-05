@@ -12,8 +12,8 @@ using cartoraServer.Data;
 namespace cartoraServer.Migrations
 {
     [DbContext(typeof(AContext))]
-    [Migration("20220829232029_edituserr")]
-    partial class edituserr
+    [Migration("20220903013027_updatedusertble")]
+    partial class updatedusertble
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,41 @@ namespace cartoraServer.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("cartoraServer.models.Product", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
+
+                    b.Property<string>("Snapshot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("frameColors")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool?>("stock")
+                        .HasColumnType("bit");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Products");
+                });
 
             modelBuilder.Entity("cartoraServer.models.Users", b =>
                 {
@@ -44,7 +79,7 @@ namespace cartoraServer.Migrations
 
                     b.Property<string>("email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("password")
                         .IsRequired()
@@ -59,7 +94,26 @@ namespace cartoraServer.Migrations
 
                     b.HasKey("id");
 
+                    b.HasIndex("email")
+                        .IsUnique();
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("cartoraServer.models.Product", b =>
+                {
+                    b.HasOne("cartoraServer.models.Users", "User")
+                        .WithMany("Products")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("cartoraServer.models.Users", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

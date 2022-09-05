@@ -30,12 +30,14 @@ namespace cartoraServer.Controllers
             _userServe = userSer;
         }
         // GET: api/values
-        [Authorize]
+        //[Authorize]
         [HttpGet]
-        public IEnumerable<string> Get([FromHeader(Name = "Authorization")] string request)
+        public ActionResult<ResData<Users>> Get()
         {
-            var user = (Users)HttpContext.Items["User"]!;
-            return new string[] { "value1", $"{user.email}" };
+            //var user = (Users)HttpContext.Items["User"]!;
+            //return new string[] { "value1", $"{user.email}" };
+            var users = db.Users.Include(pp=>pp.Products).ToList();
+            return Ok(new ResData<Users> { status = true, data = users, message = "successfully Created" });
         }
 
         // GET api/values/5
@@ -48,11 +50,11 @@ namespace cartoraServer.Controllers
         // POST api/values
         [HttpPost]
         [Route("signup")]
-        public async Task<ActionResult<Users>> Post([FromBody]Users request)
+        public async Task<ActionResult<ResData<UsersDto>>> Post([FromBody]UsersDto request)
         {
             if (!ModelState.IsValid)
             {
-                ResData Errorresponse = new ResData();
+                ResData<string> Errorresponse = new ResData<string>();
                 Errorresponse.message = "all required is not supplied";
                 Errorresponse.status = false;
                 return BadRequest(Errorresponse);
@@ -62,7 +64,7 @@ namespace cartoraServer.Controllers
             Console.WriteLine(IsexistUser);
             if (IsexistUser!=null)
             { 
-                ResData Errorresponse = new ResData();
+                ResData<string> Errorresponse = new ResData<string>();
                 Errorresponse.message = $"A user with the email {request.email} already exist";
                 Errorresponse.status = false;
                 return BadRequest(Errorresponse);
@@ -71,7 +73,7 @@ namespace cartoraServer.Controllers
             var newUser = new Users { email = request.email.ToLower(), password = hash, userName = request.userName, brand = request.brand, country = request.country };
             await db.Users.AddAsync(newUser);
             db.SaveChanges();
-            ResData response = new ResData();
+            ResData<UsersDto> response = new ResData<UsersDto>();
                 response.message = "Registration was successfull";
                 response.status = true;
             //var item = new List<dynamic>(){ "hello"};
@@ -82,11 +84,11 @@ namespace cartoraServer.Controllers
         }
 
         [HttpPost("Login")]
-        public ActionResult<ResData> Login(LoginModel request)
+        public ActionResult<ResData<AuthResponse>> Login(LoginModel request)
         {
             if (!ModelState.IsValid)
             {
-                ResData Errorresponse1 = new ResData();
+                ResData<string> Errorresponse1 = new ResData<string>();
                 Errorresponse1.message = "all required is not supplied";
                 Errorresponse1.status = false;
                 return BadRequest(Errorresponse1);
@@ -95,7 +97,7 @@ namespace cartoraServer.Controllers
 
             if (Isexist == null)
             {
-                ResData Errorresponse2 = new ResData();
+                ResData<string> Errorresponse2 = new ResData<string>();
                 Errorresponse2.message = $"Account not found for {request.email} ";
                 Errorresponse2.status = false;
                 return BadRequest(Errorresponse2);
@@ -108,7 +110,7 @@ namespace cartoraServer.Controllers
 
                     string Token = _userServe.generateJwtToken(Isexist);
                     AuthResponse userSuccess = new AuthResponse(Isexist, Token);
-                    ResData response = new ResData();
+                    ResData<AuthResponse> response = new ResData<AuthResponse>();
                     response.message = "Logged In successfull";
                     response.status = true; 
                    Console.WriteLine(ModelState.IsValid);
@@ -117,13 +119,13 @@ namespace cartoraServer.Controllers
                 }
                 else
                 {
-                    ResData Errorresponses = new ResData();
+                    ResData<string> Errorresponses = new ResData<string>();
                     Errorresponses.message = "Inavalid email Or password combination";
                     Errorresponses.status = false;
                     return BadRequest(Errorresponses);
                 }
             }
-            ResData Errorresponse = new ResData();
+            ResData<string> Errorresponse = new ResData<string>();
             Errorresponse.message = $"Unable to process request try again ";
             Errorresponse.status = false;
             return BadRequest(Errorresponse);

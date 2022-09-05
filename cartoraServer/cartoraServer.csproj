@@ -28,11 +28,21 @@
     <None Remove="Newtonsoft.Json" />
     <None Remove="services\" />
     <None Remove="Helpers\" />
+    <None Remove="Migrations\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="models\" />
     <Folder Include="services\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Migrations\" />
+    <Folder Include="wwwroot\" />
+    <Folder Include="wwwroot\Files\" />
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Remove="wwwroot\" />
+    <Content Remove="wwwroot\Files\" />
+    <Content Remove="wwwroot\images\" />
   </ItemGroup>
 </Project>

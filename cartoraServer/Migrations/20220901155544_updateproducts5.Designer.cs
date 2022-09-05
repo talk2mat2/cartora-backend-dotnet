@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cartoraServer.Data;
 
@@ -11,9 +12,10 @@ using cartoraServer.Data;
 namespace cartoraServer.Migrations
 {
     [DbContext(typeof(AContext))]
-    partial class AContextModelSnapshot : ModelSnapshot
+    [Migration("20220901155544_updateproducts5")]
+    partial class updateproducts5
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,28 +24,6 @@ namespace cartoraServer.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("cartoraServer.models.ImgeUrll", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
-
-                    b.Property<int>("Productid")
-                        .HasColumnType("int");
-
-                    b.Property<string>("url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("Productid");
-
-                    b.ToTable("ImgeUrll");
-                });
-
             modelBuilder.Entity("cartoraServer.models.Product", b =>
                 {
                     b.Property<int>("id")
@@ -51,15 +31,6 @@ namespace cartoraServer.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
-
-                    b.Property<bool>("Iscollection")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("Mediatype")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
 
                     b.Property<string>("Snapshot")
                         .HasColumnType("nvarchar(max)");
@@ -129,36 +100,15 @@ namespace cartoraServer.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("cartoraServer.models.ImgeUrll", b =>
-                {
-                    b.HasOne("cartoraServer.models.Product", "Product")
-                        .WithMany("Media")
-                        .HasForeignKey("Productid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("cartoraServer.models.Product", b =>
                 {
                     b.HasOne("cartoraServer.models.Users", "User")
-                        .WithMany("Products")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("cartoraServer.models.Product", b =>
-                {
-                    b.Navigation("Media");
-                });
-
-            modelBuilder.Entity("cartoraServer.models.Users", b =>
-                {
-                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cartoraServer.Data;
 
@@ -11,9 +12,10 @@ using cartoraServer.Data;
 namespace cartoraServer.Migrations
 {
     [DbContext(typeof(AContext))]
-    partial class AContextModelSnapshot : ModelSnapshot
+    [Migration("20220905140249_mdcolumns")]
+    partial class mdcolumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,7 +32,7 @@ namespace cartoraServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
 
-                    b.Property<int>("Productid")
+                    b.Property<int?>("Productid")
                         .HasColumnType("int");
 
                     b.Property<string>("url")
@@ -52,13 +54,7 @@ namespace cartoraServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
 
-                    b.Property<bool>("Iscollection")
-                        .HasColumnType("bit");
-
                     b.Property<int?>("Mediatype")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Price")
                         .HasColumnType("int");
 
                     b.Property<string>("Snapshot")
@@ -131,13 +127,9 @@ namespace cartoraServer.Migrations
 
             modelBuilder.Entity("cartoraServer.models.ImgeUrll", b =>
                 {
-                    b.HasOne("cartoraServer.models.Product", "Product")
+                    b.HasOne("cartoraServer.models.Product", null)
                         .WithMany("Media")
-                        .HasForeignKey("Productid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
+                        .HasForeignKey("Productid");
                 });
 
             modelBuilder.Entity("cartoraServer.models.Product", b =>

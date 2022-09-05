@@ -1,15 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace cartoraServer.models
 {
     [Index(nameof(email), IsUnique = true)]
-    public class Users
+    public class UsersDto
     {
-        //public Users
-        //    ()
+        //public UsersDto()
         //{
         //}
         public int id { get; set; }
@@ -20,13 +18,10 @@ namespace cartoraServer.models
         public string email { get; set; } = string.Empty;
         public string? country { get; set; } = string.Empty;
         public DateTime? createdAt { get; set; } = DateTime.Now;
-        
-        [JsonIgnore]
-        public List<Product> Products { get; set; } = null!;
         public string? profileImage { get; set; } = string.Empty;
         [Required]
         public string password { get; set; } = "";
-        
+       
     }
 }
 
