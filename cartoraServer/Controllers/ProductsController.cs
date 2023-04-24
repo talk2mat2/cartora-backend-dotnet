@@ -181,9 +181,23 @@ namespace cartoraServer.Controllers
         [HttpGet("getUserProducst/{id}")]
         public async Task<ActionResult<ResData<List<Product>>>> getUserProducst(int id)
         {
-            var productsList = await db.Products.Where(c => c.UserId == id).OrderByDescending(p => p.createdAt).ToListAsync();
+            var productsList = await db.Products.Where(c => c.UserId == id).OrderByDescending(p => p.createdAt).Select(ppp => new UsersProducts
+            {
+                id = ppp.id,
+                UserId = ppp.UserId,
+                Price = ppp.Price,
+                description = ppp.description,
+                Media = ppp.Media,
+                stock = ppp.stock,
+                Iscollection = ppp.Iscollection,
+                Snapshot = ppp.Snapshot,
+                frameColors = ppp.frameColors,
+                Mediatype = ppp.Mediatype,
+                User = new { userName = ppp.User!.userName, brand = ppp.User.brand, phoneNo = ppp.User.phoneNo }
 
-            return Ok(new ResData<Product>() { data = productsList, message = "successfull", status = true });
+            }).ToListAsync();
+
+            return Ok(new ResData<UsersProducts>() { data = productsList, message = "successfully retrieved", status = true });
 
         }
         [HttpGet("getMyCollections/{id}")]
@@ -221,7 +235,8 @@ namespace cartoraServer.Controllers
        Snapshot = ppp.Snapshot,
        frameColors = ppp.frameColors,
        Mediatype = ppp.Mediatype,
-       User = new { userName = ppp.User!.userName, brand = ppp.User.brand }
+       User = new { userName = ppp.User!.userName, brand = ppp.User.brand, phoneNo = ppp.User.phoneNo }
+
    }).ToListAsync();
             return Ok(new ResData<UsersProducts>() { data = data, message = "successfully retrieved", status = true });
         }
