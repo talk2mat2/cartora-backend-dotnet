@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cartoraServer.Data;
 
@@ -11,9 +12,10 @@ using cartoraServer.Data;
 namespace cartoraServer.Migrations
 {
     [DbContext(typeof(AContext))]
-    partial class AContextModelSnapshot : ModelSnapshot
+    [Migration("20230424101309_likeproducts")]
+    partial class likeproducts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,9 +156,6 @@ namespace cartoraServer.Migrations
 
                     b.Property<string>("password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("phoneNo")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("profileImage")

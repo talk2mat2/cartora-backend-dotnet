@@ -41,6 +41,7 @@ namespace cartoraServer.models
         
         public Users? User { get; set; }
         public int UserId { get; set; }
+        public string? Title { get; set; } = "";
         public string frameColors { get; set; } = "";
         public DateTime createdAt { get; set; } = DateTime.Now;
         public string? Snapshot { get; set; } = "";
@@ -48,6 +49,7 @@ namespace cartoraServer.models
         public List<ImgeUrll> Media { get; set; } = new List<ImgeUrll>();
         public int Price { get; set; }
         public bool Iscollection { get; set; } = false;
+      
 
     }
 

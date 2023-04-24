@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cartoraServer.Data;
 
@@ -11,9 +12,10 @@ using cartoraServer.Data;
 namespace cartoraServer.Migrations
 {
     [DbContext(typeof(AContext))]
-    partial class AContextModelSnapshot : ModelSnapshot
+    [Migration("20230413190156_jojo2")]
+    partial class jojo2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,23 +63,6 @@ namespace cartoraServer.Migrations
                     b.HasKey("id");
 
                     b.ToTable("KnightModel");
-                });
-
-            modelBuilder.Entity("cartoraServer.models.LikeModel", b =>
-                {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("productId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
-
-                    b.HasKey("id");
-
-                    b.ToTable("LikeModel");
                 });
 
             modelBuilder.Entity("cartoraServer.models.Product", b =>
@@ -135,9 +120,6 @@ namespace cartoraServer.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"), 1L, 1);
 
-                    b.Property<string>("AboutMe")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("brand")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -154,9 +136,6 @@ namespace cartoraServer.Migrations
 
                     b.Property<string>("password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("phoneNo")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("profileImage")

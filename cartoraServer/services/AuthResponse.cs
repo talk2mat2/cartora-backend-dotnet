@@ -13,6 +13,8 @@ namespace cartoraServer.services
         public string Token { get; set; }
         public string profileImage { get; set; } = "";
         public dynamic createdAt { get; set; }
+        public string AboutMe { get; set; }
+        public string phoneNo { get; set; }
 
 
         public AuthResponse(Users user, string token)
@@ -24,6 +26,9 @@ namespace cartoraServer.services
             Token = token;
             profileImage = user.profileImage!;
             createdAt = user.createdAt!;
+            AboutMe = user.AboutMe= "";
+            phoneNo = user.phoneNo = "";
+
         }
     }
 

@@ -27,10 +27,10 @@ namespace cartoraServer.Controllers
         }
         // GET: api/values
         [HttpGet]
-        public ActionResult<ResData<Product>> Get()
+        public ActionResult<ResData<Product>> Get([FromQuery] int userId)
         {
-            var data = db.Products.Select(ppp =>
-            new UsersProducts
+            var data = db.Products.Where(ppp=>ppp.Iscollection==false).OrderByDescending(p => p.createdAt).Select(ppp =>
+            new UsersProducts()
             {
                 id = ppp.id,
                 UserId = ppp.UserId,
@@ -42,17 +42,21 @@ namespace cartoraServer.Controllers
                 Snapshot=ppp.Snapshot,
                 frameColors=ppp.frameColors,
                 Mediatype=ppp.Mediatype,
-                User = new { userName = ppp.User!.userName,brand=ppp.User.brand }
+                Title=ppp.Title,
+                User = new { userName = ppp.User!.userName,brand=ppp.User.brand , phoneNo =ppp.User.phoneNo},
+                isKnigted=db.KnightModel.Any(ss=>ss.brandId==ppp.UserId && ss.folowerId==userId),
+                isLiked = db.LikeModel.Any(ss => ss.userId == userId && ss.productId== ppp.id)
+
             }).ToList();
             return Ok(new ResData<UsersProducts>() { data = data, message = "successfully retrieved", status = true });
         }
 
         // GET api/values/5
         [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+        //public string Get(int id)
+        //{
+        //    return "value";
+        //}
 
         // POST api/values
         [HttpPost]
@@ -123,8 +127,13 @@ namespace cartoraServer.Controllers
                 Mediatype = request.Mediatype,
                 User = currentUser,
                 Snapshot = Snapshotpath,
+                Price=request.Price,
                 frameColors = colors,
-                Media=MediaList
+                Media=MediaList,
+                stock=request.stock,
+                Iscollection=request.Iscollection,
+                Title=request.Title
+                
 
             };
             db.Products.Add(newProduct);
@@ -144,6 +153,181 @@ namespace cartoraServer.Controllers
         public void Delete(int id)
         {
         }
+
+        //[HttpPost("likeProduct")]
+        //public async Task<ActionResult<ResData<string>>> LikeProduct([FromBody] LikeProductDto rq)
+        //{
+        //    var products = await db.Products.FindAsync(rq.productId);
+        //  if(products!=null)
+        //    {
+        //        string likes = products.likes;
+        //        var likeList = likes.Split(",");
+        //       if(likeList.Contains(rq.userId))
+        //        {
+
+        //        }
+        //        var response = new ResData<string>();
+        //        response.message = "Liked";
+        //        response.data = null!;
+        //        response.status = true;
+        //        return Ok(response);
+        //    }
+        //    else
+        //    {
+        //        return NotFound();
+        //    }
+        //}
+
+        [HttpGet("getUserProducst/{id}")]
+        public async Task<ActionResult<ResData<List<Product>>>> getUserProducst(int id)
+        {
+            var productsList = await db.Products.Where(c => c.UserId == id).OrderByDescending(p => p.createdAt).ToListAsync();
+
+            return Ok(new ResData<Product>() { data = productsList, message = "successfull", status = true });
+
+        }
+        [HttpGet("getMyCollections/{id}")]
+        public async Task<ActionResult<ResData<List<Product>>>> getMyCollections(int id)
+        {
+            //var productsList = await db.Products.Where(c => c.UserId == id && c.Iscollection==true).Select(ppp =>
+            //new UsersProducts
+            //{
+            //    id = ppp.id,
+            //    UserId = ppp.UserId,
+            //    Price = ppp.Price,
+            //    description = ppp.description,
+            //    Media = ppp.Media,
+            //    stock = ppp.stock,
+            //    Iscollection = ppp.Iscollection,
+            //    Snapshot = ppp.Snapshot,
+            //    frameColors = ppp.frameColors,
+            //    Mediatype = ppp.Mediatype,
+            //    User = new { userName = ppp.User!.userName, brand = ppp.User.brand }
+            //}).ToListAsync();
+
+            //return Ok(new ResData<Product>() { data = productsList, message = "successfull", status = true });
+
+
+            var data = await db.Products.Where(ppp => ppp.Iscollection == true &&ppp.UserId == id).OrderByDescending(p => p.createdAt).Select(ppp =>
+   new UsersProducts
+   {
+       id = ppp.id,
+       UserId = ppp.UserId,
+       Price = ppp.Price,
+       description = ppp.description,
+       Media = ppp.Media,
+       stock = ppp.stock,
+       Iscollection = ppp.Iscollection,
+       Snapshot = ppp.Snapshot,
+       frameColors = ppp.frameColors,
+       Mediatype = ppp.Mediatype,
+       User = new { userName = ppp.User!.userName, brand = ppp.User.brand }
+   }).ToListAsync();
+            return Ok(new ResData<UsersProducts>() { data = data, message = "successfully retrieved", status = true });
+        }
+
+
+        [HttpPost("deleteProduct/{id}")]
+        public async Task<ActionResult<ResData<string>>> DeleteProduct(int id)
+        {
+            var user = db.Products.Find(id);
+            if (user != null)
+            {
+                db.Products.Remove(user);
+                await db.SaveChangesAsync();
+                return Ok(new ResData<string>() { message = "successfully deleted", status = true });
+            }
+            else
+            {
+                return StatusCode(504, new ResData<string>() { message = "not implemented", status = true });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("kintit/{id}")]
+        public async Task<ActionResult<ResData<string>>> knitit(int id)
+        {
+            try
+            {
+           
+
+                var user = HttpContext.Items["User"] as Users;
+                if (user != null)
+                {
+                    var isExist=db.KnightModel.Where(pp => pp.folowerId == user.id && pp.brandId == id).FirstOrDefault();
+                    if (isExist!= null)
+                    {
+                        db.KnightModel.Remove(isExist);
+                        await db.SaveChangesAsync();
+                        return Ok(new ResData<string> { message = "Unknighted", status = true });
+                    }
+                    else
+                    {
+                        var newUser = new KnightModel();
+                        newUser.folowerId = user.id;
+                        newUser.brandId = id;
+                        db.KnightModel.Add(newUser);
+                        await db.SaveChangesAsync();
+                        return Ok(new ResData<string> { message = "knighted", status = true });
+                    }
+                   
+                }
+
+                else
+                {
+                    return StatusCode(505, new ResData<string>() { message = $"User must be logged in to knit a product", status = false });
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(505, new ResData<string>() { message = $"failure{e}", status = false });
+
+            }
+        }
+
+
+        [HttpPost("likeProduct")]
+        public async Task<ActionResult<ResData<dynamic>>> likeProduct([FromBody] LikeDto likeDto)
+        {
+            try
+            {
+
+
+                var user = HttpContext.Items["User"] as Users;
+                if (user != null)
+                {
+                    var isExist = db.LikeModel.Where(pp => pp.userId == user.id && pp.productId == likeDto.productId).FirstOrDefault();
+                    if (isExist != null)
+                    {
+                        db.LikeModel.Remove(isExist);
+                        await db.SaveChangesAsync();
+                        return Ok(new ResData<string> { message = "Unliked", status = true });
+                    }
+                    else
+                    {
+                        var newUser = new LikeModel();
+                        newUser.userId = user.id;
+                        newUser.productId = likeDto.productId;
+                        db.LikeModel.Add(newUser);
+                        await db.SaveChangesAsync();
+                        return Ok(new ResData<string> { message = "liked", status = true });
+                    }
+
+                }
+
+                else
+                {
+                    return StatusCode(505, new ResData<string>() { message = $"User must be logged in to knit a product", status = false });
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(505, new ResData<string>() { message = $"failure{e}", status = false });
+
+            }
+        }
     }
+
+
 }
 

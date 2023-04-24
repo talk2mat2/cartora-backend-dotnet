@@ -20,13 +20,14 @@ namespace cartoraServer.models
         public string email { get; set; } = string.Empty;
         public string? country { get; set; } = string.Empty;
         public DateTime? createdAt { get; set; } = DateTime.Now;
-        
+        public string? AboutMe { get; set; } = "";
         [JsonIgnore]
         public List<Product> Products { get; set; } = null!;
         public string? profileImage { get; set; } = string.Empty;
         [Required]
         public string password { get; set; } = "";
-        
+        public string? phoneNo { get; set; } = "";
+
     }
 }
 

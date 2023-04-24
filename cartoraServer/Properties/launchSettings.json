@@ -4,7 +4,7 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:3387",
+      "applicationUrl": "http://192.168.8.100:5262",
       "sslPort": 44336
     }
   },
@@ -12,7 +12,7 @@
     "cartoraServer": {
       "commandName": "Project",
       "launchUrl": "swagger",
-      "applicationUrl": "http://192.168.43.139:5262",
+      "applicationUrl": "http://192.168.8.100:5262",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

@@ -21,7 +21,9 @@ namespace cartoraServer.models
         public string? profileImage { get; set; } = string.Empty;
         [Required]
         public string password { get; set; } = "";
-       
+        public string? phoneNo { get; set; } = ""; 
+
+
     }
 }
 
