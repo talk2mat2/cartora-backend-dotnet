@@ -10,6 +10,7 @@ namespace cartoraServer.models
         public string userName { get; set; } = "";
         public string brand { get; set; } = "";
         public string aboutMe { get; set; } = "";
+        public string? profileImage { get; set; } = "";
     }
 }
 

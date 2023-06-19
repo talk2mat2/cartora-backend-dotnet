@@ -47,7 +47,7 @@ namespace cartoraServer.Controllers
         {
             var getUser = await db.Users.FindAsync(id);
             if (getUser != null)
-            { return Ok(new ResData<usersStoreDto>() { message = "successfully retrieved user", status = true, data = new List<usersStoreDto>() { new usersStoreDto() { brand = getUser.brand, userName = getUser.userName, aboutMe= getUser.AboutMe! } } }); }
+            { return Ok(new ResData<usersStoreDto>() { message = "successfully retrieved user", status = true, data = new List<usersStoreDto>() { new usersStoreDto() { brand = getUser.brand, userName = getUser.userName, aboutMe= getUser.AboutMe!, profileImage=getUser.profileImage } } }); }
 
             else
             {
@@ -62,6 +62,7 @@ namespace cartoraServer.Controllers
         [Route("signup")]
         public async Task<ActionResult<ResData<UsersDto>>> Post([FromBody] UsersDto request)
         {
+
             if (!ModelState.IsValid)
             {
                 ResData<string> Errorresponse = new ResData<string>();
@@ -94,7 +95,7 @@ namespace cartoraServer.Controllers
         }
 
         [HttpPost("Login")]
-        public ActionResult<ResData<AuthResponse>> Login(LoginModel request)
+        public async Task< ActionResult<ResData<AuthResponse>>> Login(LoginModel request)
         {
             if (!ModelState.IsValid)
             {
@@ -103,6 +104,7 @@ namespace cartoraServer.Controllers
                 Errorresponse1.status = false;
                 return BadRequest(Errorresponse1);
             }
+            //var getUser = db.Users.Where(TT => TT.email == request.email).FirstOrDefault();
             var Isexist = db.Users.Where(p => p.email == request.email).FirstOrDefault();
 
             if (Isexist == null)
@@ -119,12 +121,24 @@ namespace cartoraServer.Controllers
                 {
 
                     string Token = _userServe.generateJwtToken(Isexist);
-                    AuthResponse userSuccess = new AuthResponse(Isexist, Token);
-                    ResData<AuthResponse> response = new ResData<AuthResponse>();
+                    var userRes = new { Token=Token,data=new List<dynamic> {} };
+                    ResData<dynamic> response = new ResData<dynamic>( );
+                    
                     response.message = "Logged In successfull";
                     response.status = true;
-                    Console.WriteLine(ModelState.IsValid);
-                    response.data.Add(userSuccess);
+                    var newItem = new { Token = Token,
+                        id= Isexist.id,
+                        userName= Isexist.userName,
+                        brand=Isexist.brand,
+                        email =Isexist.email,
+                        country= Isexist.country,
+                        createdAt= Isexist.createdAt,
+                        aboutMe= Isexist.AboutMe,
+                        profileImage= Isexist.profileImage,
+                        phoneNo=Isexist.phoneNo,
+                        tags=Isexist.tags
+                        };
+                    response.data = new List<dynamic> { newItem };
                     return Ok(response);
                 }
                 else
@@ -245,6 +259,266 @@ namespace cartoraServer.Controllers
             }
 
         }
+
+
+        [Authorize]
+        [HttpPost("updatetags")]
+        public async Task<ActionResult<ResData<dynamic>>> updatetags(tagsdto rq)
+        {
+
+            var user = HttpContext.Items["User"] as Users;
+
+            //check if userstag already exist
+            var exist = db.Tags.Where(item => item.UserId == user!.id).FirstOrDefault();
+
+            if (exist != null)
+            {
+                //we update herew
+                foreach (var prop in rq.GetType().GetProperties())
+                {
+                    var propname = prop.Name;
+                    var value = prop.GetValue(rq);
+                    if (value != null)
+                    {
+                        var toProperty = exist.GetType().GetProperty(propname);
+                        toProperty!.SetValue(exist, value, null);
+                    }
+             
+                }
+                await db.SaveChangesAsync();
+                return Ok(new ResData<tags>() { message = "Successfull Updated", status = true, data = new List<tags> { exist } });
+
+            }
+            else
+            {
+                rq.UserId = user!.id;
+
+                tags newTag = new tags { };
+                foreach (var prop in rq.GetType().GetProperties())
+                {
+                    var propname = prop.Name;
+                    var value = prop.GetValue(rq);
+                    //tags newTag = new tags { };
+                    var toProperty = newTag.GetType().GetProperty(propname);
+                    toProperty!.SetValue(newTag, value, null);
+
+                }
+                //await db.Tags.AddAsync(newTag);
+                await db.SaveChangesAsync();
+                return Ok(new ResData<tags>() { message = "Successfull Created", status = true, data = new List<tags> { newTag } });
+            }
+            
+          
+
+
+        }
+
+        [Authorize]
+        [HttpPost("UpdateUserProfile")]
+        public async Task<ActionResult<ResData<dynamic>>> UpdateUserProfile(ProfileDto rq)
+        {
+            var user = HttpContext.Items["User"] as Users;
+            var usersData = db.Users.Where(xx => xx.id == user!.id).FirstOrDefault();
+
+            if (usersData != null)
+            {
+                foreach(var prop in  rq.GetType().GetProperties())
+                {
+                    var propname = prop.Name;
+                    var value= prop.GetValue(rq);
+                    if (value != null) 
+                    {
+                        var toProperty = usersData.GetType().GetProperty(propname);
+                        toProperty!.SetValue(usersData,value,null);
+                    }
+                   
+                }
+                await db.SaveChangesAsync();
+                return Ok(new ResData<Users>() { message = "Successfull Updated", status = true, data = new List<Users> { usersData } });
+            }
+
+
+            return StatusCode(505, new ResData<string>() { message = $"failure", status = false });
+
+        }
+
+
+
+
+        [HttpGet("fetchUserTags/{userId}")]
+        public ActionResult<string> fetchUserTags(int userId)
+        {
+
+            try
+            {
+                //var user = HttpContext.Items["User"] as Users;
+                if (ModelState.IsValid)
+                {
+                    var UsersTags =  db.Tags.Where(pp => pp.UserId == userId).FirstOrDefault();
+
+                    if (UsersTags != null)
+                    {
+                        ResData<tags> jjJ = new ResData<tags>() { message = "successful", status = true,data= new List<tags> { UsersTags } };
+                        return Ok(jjJ);
+                    }
+                    else
+                    {
+                        ResData<tags> jj = new ResData<tags>() { message = "successful", status = true, };
+                        jj.data.Add(new tags { });
+
+                        return Ok(jj);
+                    }
+               
+                 
+                }
+                else
+                {
+                    return StatusCode(505, new ResData<string>() { message = $"User id must be provided", status = false });
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(505, new ResData<string>() { message = $"failure{e}", status = false });
+            }
+
+        }
+
+
+
+
+
+
+        [HttpGet("fetchUserKniteD/{userId}")]
+        public async Task<ActionResult<dynamic>> fetchUserKniteD(int userId)
+        {
+            var user = HttpContext.Items["User"] as Users;
+            try
+            {
+                //var user = HttpContext.Items["User"] as Users;
+                if (ModelState.IsValid)
+                {
+
+                    var knitedList = await db.KnightModel.Where(pp => pp.folowerId == userId).ToListAsync();
+
+                    if (user != null)
+                    {
+                        var knitedLists = db.KnightModel.Where(pp => pp.folowerId == userId).Select(xxx => new knitedUsersList(db.Users.Where(item => item.id == xxx.brandId).FirstOrDefault()!) { isKnigted = db.KnightModel.Any(xp => xp.brandId == xxx.folowerId && xp.folowerId == user!.id) }).ToList();
+                        ResData<knitedUsersList> jj = new ResData<knitedUsersList>() { message = "successful", status = true, data = knitedLists };
+                        return Ok(jj);
+                    }
+                    else
+                    {
+                        var knitedLists = db.KnightModel.Where(pp => pp.folowerId == userId).Select(xxx => new knitedUsersList(db.Users.Where(item => item.id == xxx.brandId).FirstOrDefault()!)).ToList();
+                        ResData<knitedUsersList> jj = new ResData<knitedUsersList>() { message = "successful", status = true, data = knitedLists };
+                        return Ok(jj);
+                    }
+       
+
+                   
+
+              
+                }
+                else
+                {
+                    return StatusCode(505, new ResData<string>() { message = $"User id must be provided", status = false });
+                }
+            }
+            catch (Exception e)
+            {
+                return StatusCode(505, new ResData<string>() { message = $"failure{e}", status = false });
+            }
+
+        }
+
+
+        
+        [HttpGet("fetchUserKnitersList/{userId}")]
+        public async Task<ActionResult<dynamic>> fetchUserKnitersList(int userId)
+        {
+            var user = HttpContext.Items["User"] as Users;
+
+           
+
+            try
+            {
+                if (user != null)
+                {
+                    if (ModelState.IsValid)
+                    {
+
+                        var knitedList = await db.KnightModel.Where(pp => pp.brandId == userId).ToListAsync();
+
+                        var knitedLists = db.KnightModel.Where(pp => pp.brandId == userId).Select(xxx => new knitedUsersList(db.Users.Where(item => item.id == xxx.folowerId).FirstOrDefault()!) { isKnigted = db.KnightModel.Any(xp => xp.brandId == xxx.folowerId && xp.folowerId == user!.id) }).ToList();
+
+                        ResData<knitedUsersList> jj = new ResData<knitedUsersList>() { message = "successful", status = true, data = knitedLists };
+                        //check where brand id is flowwerid and follower is is userid
+                        return Ok(jj);
+                    }
+                    else
+                    {
+                        return StatusCode(505, new ResData<string>() { message = $"User id must be provided", status = false });
+                    }
+
+                }
+                else
+                {
+                    if (ModelState.IsValid)
+                    {
+
+                        var knitedList = await db.KnightModel.Where(pp => pp.brandId == userId).ToListAsync();
+
+                        var knitedLists = db.KnightModel.Where(pp => pp.brandId == userId).Select(xxx => new knitedUsersList(db.Users.Where(item => item.id == xxx.folowerId).FirstOrDefault()!)).ToList();
+
+                        ResData<knitedUsersList> jj = new ResData<knitedUsersList>() { message = "successful", status = true, data = knitedLists };
+                        //check where brand id is flowwerid and follower is is userid
+                        return Ok(jj);
+                    }
+                    else
+                    {
+                        return StatusCode(505, new ResData<string>() { message = $"User id must be provided", status = false });
+                    }
+                }
+
+                //var user = HttpContext.Items["User"] as Users;
+              
+            }
+            catch (Exception e)
+            {
+                return StatusCode(505, new ResData<string>() { message = $"failure{e}", status = false });
+            }
+
+        }
+
+
+        [HttpGet("autoSearch")]
+        public ActionResult<ResData<dynamic>> autoSearch([FromQuery] string query)
+        {
+            if (query == null)
+            {
+                return StatusCode(200, new ResData<string>() { message = $"Empty Response", status = true,data= new List<string> { } });
+            }
+            else
+            {
+
+                var resp1 = db.Users.Where(ty => ty.brand.Contains(query) || ty.userName.Contains(query)).Select(po => new Users {
+ userName=po.userName,
+ id=po.id,
+ brand=po.brand,
+ email=po.email,
+ profileImage=po.profileImage,
+ phoneNo=po.phoneNo
+                }).ToList();
+                //var resp1 = from b in db.Users
+                //            where b.brand.StartsWith(query) || b.userName.StartsWith(query)
+                //            select b;
+
+                //var data = new List<IQueryable> { };
+                var data = new List<Users> { };
+                return StatusCode(200, new ResData<Users>() { message = $"Success", status = true, data = resp1 });
+            }
+
+        }
+
 
     }
 }

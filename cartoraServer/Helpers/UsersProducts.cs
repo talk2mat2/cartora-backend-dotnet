@@ -25,6 +25,7 @@ namespace cartoraServer.Helpers
         public bool Iscollection { get; set; } = false;
         public dynamic isKnigted { get; set; } = "";
         public dynamic isLiked { get; set; } = "";
+        public int likeCount { get; set; }
     }
 }
 

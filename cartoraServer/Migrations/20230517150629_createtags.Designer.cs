@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using cartoraServer.Data;
 
@@ -11,9 +12,10 @@ using cartoraServer.Data;
 namespace cartoraServer.Migrations
 {
     [DbContext(typeof(AContext))]
-    partial class AContextModelSnapshot : ModelSnapshot
+    [Migration("20230517150629_createtags")]
+    partial class createtags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -133,40 +135,40 @@ namespace cartoraServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("Agric")
+                    b.Property<bool>("Agric")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Babies")
+                    b.Property<bool>("Babies")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Electronics")
+                    b.Property<bool>("Electronics")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Equipments")
+                    b.Property<bool>("Equipments")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Fashion")
+                    b.Property<bool>("Fashion")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Furnitures")
+                    b.Property<bool>("Furnitures")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Health")
+                    b.Property<bool>("Health")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Jobs")
+                    b.Property<bool>("Jobs")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Properties")
+                    b.Property<bool>("Properties")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Repairs")
+                    b.Property<bool>("Repairs")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Services")
+                    b.Property<bool>("Services")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("Sport")
+                    b.Property<bool>("Sport")
                         .HasColumnType("bit");
 
                     b.Property<int>("UserId")

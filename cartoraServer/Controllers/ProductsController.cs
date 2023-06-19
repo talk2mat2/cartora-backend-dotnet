@@ -9,6 +9,8 @@ using cartoraServer.models;
 using cartoraServer.services;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Collections;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -27,9 +29,10 @@ namespace cartoraServer.Controllers
         }
         // GET: api/values
         [HttpGet]
-        public ActionResult<ResData<Product>> Get([FromQuery] int userId)
+        public ActionResult<ResData<Product>> Get([FromQuery] int userId, int position=0)
         {
-            var data = db.Products.Where(ppp=>ppp.Iscollection==false).OrderByDescending(p => p.createdAt).Select(ppp =>
+            var kk = Request.QueryString;
+            var data = db.Products.Where(ppp=>ppp.Iscollection==false).OrderByDescending(p => p.createdAt).Skip(position).Take(10).Select(ppp =>
             new UsersProducts()
             {
                 id = ppp.id,
@@ -43,12 +46,13 @@ namespace cartoraServer.Controllers
                 frameColors=ppp.frameColors,
                 Mediatype=ppp.Mediatype,
                 Title=ppp.Title,
-                User = new { userName = ppp.User!.userName,brand=ppp.User.brand , phoneNo =ppp.User.phoneNo},
+                User = new { userName = ppp.User!.userName,brand=ppp.User.brand , phoneNo =ppp.User.phoneNo, profileImage =ppp.User.profileImage},
                 isKnigted=db.KnightModel.Any(ss=>ss.brandId==ppp.UserId && ss.folowerId==userId),
-                isLiked = db.LikeModel.Any(ss => ss.userId == userId && ss.productId== ppp.id)
+                isLiked = db.LikeModel.Any(ss => ss.userId == userId && ss.productId== ppp.id),
+                likeCount=db.LikeModel.Count(xx=>xx.productId==ppp.id)
 
             }).ToList();
-            return Ok(new ResData<UsersProducts>() { data = data, message = "successfully retrieved", status = true });
+            return Ok(new ResData<UsersProducts>() { data = data, message = "Successfully retrieved", status = true });
         }
 
         // GET api/values/5
@@ -138,7 +142,7 @@ namespace cartoraServer.Controllers
             };
             db.Products.Add(newProduct);
             db.SaveChanges();
-            return Ok(new ResData<Product> { status=true,data=new List<Product> { newProduct},message="successfully Created" });
+            return Ok(new ResData<Product> { status=true,data=new List<Product> { newProduct},message="Successfully Created" });
 
         }
 
@@ -179,15 +183,17 @@ namespace cartoraServer.Controllers
         //}
 
         [HttpGet("getUserProducst/{id}")]
-        public async Task<ActionResult<ResData<List<Product>>>> getUserProducst(int id)
+        public async Task<ActionResult<ResData<List<Product>>>> getUserProducst([FromQuery] int position,int id)
         {
-            var productsList = await db.Products.Where(c => c.UserId == id).OrderByDescending(p => p.createdAt).Select(ppp => new UsersProducts
+            var kk = Request.QueryString;
+            var productsList = await db.Products.Where(c => c.UserId == id && c.Iscollection==false).OrderByDescending(p => p.createdAt).Skip(position).Take(10).Select(ppp => new UsersProducts
             {
                 id = ppp.id,
                 UserId = ppp.UserId,
                 Price = ppp.Price,
                 description = ppp.description,
                 Media = ppp.Media,
+                Title = ppp.Title,
                 stock = ppp.stock,
                 Iscollection = ppp.Iscollection,
                 Snapshot = ppp.Snapshot,
@@ -197,12 +203,13 @@ namespace cartoraServer.Controllers
 
             }).ToListAsync();
 
-            return Ok(new ResData<UsersProducts>() { data = productsList, message = "successfully retrieved", status = true });
+            return Ok(new ResData<UsersProducts>() { data = productsList, message = "Successfully retrieved", status = true });
 
         }
         [HttpGet("getMyCollections/{id}")]
         public async Task<ActionResult<ResData<List<Product>>>> getMyCollections(int id)
         {
+
             //var productsList = await db.Products.Where(c => c.UserId == id && c.Iscollection==true).Select(ppp =>
             //new UsersProducts
             //{
@@ -232,13 +239,14 @@ namespace cartoraServer.Controllers
        Media = ppp.Media,
        stock = ppp.stock,
        Iscollection = ppp.Iscollection,
+       Title=ppp.Title,
        Snapshot = ppp.Snapshot,
        frameColors = ppp.frameColors,
        Mediatype = ppp.Mediatype,
        User = new { userName = ppp.User!.userName, brand = ppp.User.brand, phoneNo = ppp.User.phoneNo }
 
    }).ToListAsync();
-            return Ok(new ResData<UsersProducts>() { data = data, message = "successfully retrieved", status = true });
+            return Ok(new ResData<UsersProducts>() { data = data, message = "Successfully retrieved", status = true });
         }
 
 
@@ -250,7 +258,7 @@ namespace cartoraServer.Controllers
             {
                 db.Products.Remove(user);
                 await db.SaveChangesAsync();
-                return Ok(new ResData<string>() { message = "successfully deleted", status = true });
+                return Ok(new ResData<string>() { message = "Successfully deleted", status = true });
             }
             else
             {
@@ -341,6 +349,185 @@ namespace cartoraServer.Controllers
 
             }
         }
+
+
+        [HttpPost("uploadprofile")]
+        public async Task<ActionResult<ResData<dynamic>>> UploadRoute([FromForm] UploadDto request)
+        {
+
+
+            if (request.File != null && request.File.Count > 0)
+            {
+                var file = request.File[0];
+
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+                if (!Directory.Exists(path))
+                {
+                    Directory.CreateDirectory(path);
+                }
+
+                Guid myuuid = Guid.NewGuid();
+                string myuuidAsString = myuuid.ToString();
+                string fileExt = file.FileName.Split(".").Last();
+                string FileName = myuuidAsString + file.FileName.Split(".")[0];
+                string newFilename = myuuidAsString + FileName + "." + fileExt;
+                string fileNameWithPath = Path.Combine(path, newFilename);
+                string imageUrl = _appSettings.ServerUrl + "/images/" + newFilename;
+
+                using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                {
+                    file.CopyTo(stream);
+                }
+
+                try
+                {
+                    var user = HttpContext.Items["User"] as Users;
+                    var usersData = db.Users.Where(xx => xx.id == user!.id).FirstOrDefault();
+                    if (usersData != null)
+                    {
+                        usersData.profileImage = imageUrl;
+
+                        db.Users.Update(usersData);
+                        await db.SaveChangesAsync();
+
+                        return Ok(new ResData<Users>() { message = "Successfull Updated", status = true, data = new List<Users> { usersData } });
+
+                    }
+                    else
+                    {
+                        return StatusCode(505, new ResData<string>() { message = "user not found", status = true });
+
+                    }
+
+
+                }
+
+                catch (Exception e)
+                {
+                    return StatusCode(505, new ResData<string>() { message = $"An error occured{e}", status = false });
+
+                }
+
+
+            }
+
+            else
+            {
+                return StatusCode(505, new ResData<string>() { message = $"the operation was not succvessfull", status = false });
+            }
+        }
+
+        [HttpGet("CountUserProducs/{id}")]
+        public ActionResult<ResData<List<dynamic>>> CountUserProducst(int id)
+        {
+            var Data= db.Products.Where(pp => pp.UserId == id).Count();
+
+            return StatusCode(200, new ResData<dynamic>() { message = "Successfull", status = false, data = new List<dynamic> { new { count = Data } } });
+
+        }
+        [HttpPost("EditProduct/{id}")]
+        [Authorize]
+        public async Task<ActionResult<ResData<Product>>> EditProduct(int id, [FromForm] ProductsDto request)
+        {
+            var user = (Users)HttpContext.Items["User"]!;
+            var currentUser = await db.Users.FindAsync(user.id);
+            if (currentUser == null)
+            {
+                return NotFound(new ResData<string> { message = "user not found", status = false });
+            }
+
+            string colors = "";
+
+            //List<string> ii = new List<string> { "dd","ffff" };
+            if (request.frameColors.Count() > 0)
+            {
+                colors = String.Join(",", request.frameColors);
+            }
+
+            string Snapshotpath = "";
+            List<ImgeUrll> MediaList = new List<ImgeUrll>();
+
+            if (request.File != null && request.File.Count > 0)
+            {
+
+                foreach (var file in request.File)
+                {
+
+                    string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
+
+                    //create folder if not exist
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
+
+                    Guid myuuid = Guid.NewGuid();
+                    string myuuidAsString = myuuid.ToString();
+                    string fileExt = file.FileName.Split(".").Last();
+                    string FileName = myuuidAsString + file.FileName.Split(".")[0];
+                    string newFilename = myuuidAsString + FileName + "." + fileExt;
+                    string fileNameWithPath = Path.Combine(path, newFilename);
+                    if (file.FileName == "snapshot.jpg")
+                    {
+                        Snapshotpath = _appSettings.ServerUrl + "/images/" + newFilename;
+
+                    }
+                    else
+                    {
+
+                        MediaList.Add(new ImgeUrll { url = _appSettings.ServerUrl + "/images/" + newFilename });
+                    }
+
+                    using (var stream = new FileStream(fileNameWithPath, FileMode.Create))
+                    {
+                        file.CopyTo(stream);
+                    }
+                }
+                //model.IsSuccess = true;
+                //model.Message = "Files upload successfully";
+            }
+
+
+
+            var newProduct = new Product
+            {
+                description = request.description,
+                Mediatype = request.Mediatype,
+                User = currentUser,
+                Snapshot = Snapshotpath,
+                Price = request.Price,
+                frameColors = colors,
+                Media = MediaList,
+                stock = request.stock,
+                Iscollection = request.Iscollection,
+                Title = request.Title
+
+
+            };
+            var exitingproduct = db.Products.Where(item => item.id == id).FirstOrDefault();
+            if (exitingproduct != null)
+            {
+                exitingproduct.description = request.description;
+                exitingproduct.Mediatype = request.Mediatype;
+                exitingproduct.createdAt = new DateTime();
+                exitingproduct.Snapshot = Snapshotpath;
+                exitingproduct.Price= request.Price!= exitingproduct.Price ? request.Price: exitingproduct.Price;
+                exitingproduct.frameColors = colors;
+                exitingproduct.Media = MediaList;
+                exitingproduct.stock = request.stock;
+                exitingproduct.Iscollection = request.Iscollection;
+                exitingproduct.Title = request.Title;
+                db.Products.Update(exitingproduct);
+                db.SaveChanges();
+                return Ok(new ResData<Product> { status = true, data = new List<Product> { newProduct }, message = "successfully Created" });
+            }
+            else
+            {
+                return NotFound(new ResData<string> { message = "user not found", status = false });
+            }
+        
+            
+
+        }
+
     }
 
 

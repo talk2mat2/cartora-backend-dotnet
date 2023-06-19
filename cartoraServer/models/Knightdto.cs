@@ -13,5 +13,7 @@ namespace cartoraServer.models
     }
 
     public record KnightIt2(int kniters, int knited);
+
+    public record KnitersList(List<Users>  UsersList, int kniters);
 }
 
