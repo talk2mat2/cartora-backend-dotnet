@@ -16,6 +16,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="MailKit" Version="4.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +30,8 @@
     <None Remove="services\" />
     <None Remove="Helpers\" />
     <None Remove="Migrations\" />
+    <None Remove="Helpers\p2.html" />
+    <None Remove="MailKit" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Data\" />
@@ -44,5 +47,11 @@
     <Content Remove="wwwroot\" />
     <Content Remove="wwwroot\Files\" />
     <Content Remove="wwwroot\images\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Helpers\p2.html">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

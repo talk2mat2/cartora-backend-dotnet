@@ -12,6 +12,10 @@ using cartoraServer.services;
 using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using static cartoraServer.models.dtos;
+using static cartoraServer.models.deleteAcctDto;
+using Microsoft.AspNetCore.Hosting.Server;
+using Org.BouncyCastle.Asn1.Ocsp;
+using static System.Net.WebRequestMethods;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -85,6 +89,8 @@ namespace cartoraServer.Controllers
             await db.Users.AddAsync(newUser);
             db.SaveChanges();
             ResData<UsersDto> response = new ResData<UsersDto>();
+            string body = $"<body>\n    <h2>Hi {request.userName}</h2>\n    <p>\n      Thanks for registering with Cartora!:) <br />We are excited to Have you on\n      board.\n    </p>\n\n    <small>\n      Kind regards,<br />\n      Cartora Team</small\n    >\n  </body>";
+            var sendMail = _userServe.Sendmail("Password Change", request.email, body);
             response.message = "Registration was successfull";
             response.status = true;
             //var item = new List<dynamic>(){ "hello"};
@@ -95,7 +101,7 @@ namespace cartoraServer.Controllers
         }
 
         [HttpPost("Login")]
-        public async Task< ActionResult<ResData<AuthResponse>>> Login(LoginModel request)
+        public ActionResult<ResData<AuthResponse>> Login(LoginModel request)
         {
             if (!ModelState.IsValid)
             {
@@ -517,6 +523,109 @@ namespace cartoraServer.Controllers
                 return StatusCode(200, new ResData<Users>() { message = $"Success", status = true, data = resp1 });
             }
 
+        }
+
+        [HttpPost("DeletemyAccount")]
+        public async Task<ActionResult<ResData<string>>> DeletemyAccount(deleteDto rq)
+        {
+
+            var Isexist = db.Users.Where(p => p.id == rq.id).FirstOrDefault();
+            if (Isexist != null)
+            {
+                bool verifyPass = SecurePasswordHasher.Verify(rq.password, Isexist.password);
+                if (verifyPass)
+                {
+                    db.Users.Remove(Isexist);
+                    await db.SaveChangesAsync();
+                    return Ok(new ResData<string> { message = "Successfully Deleted", status = true });
+                }
+                else
+                {
+                    return BadRequest(new ResData<string> { message = "Invalid Password Supplied", status = true });
+                }
+            }
+            else
+            {
+                return NotFound(new ResData<string> { message = "User Not Found", status = true });
+            }
+
+
+        }
+        [HttpGet("privacy_policy")]
+        public ActionResult<string> GetHtml()
+        {
+            var html = System.IO.File.ReadAllText(@"./Helpers/p2.html");
+            return base.Content(html, "text/html");
+            //return File(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/Files/") + "privacy.html", "text/html");
+        }
+
+        [HttpPost("ForgotPassword")]
+        public async Task<ActionResult<ResData<dynamic>>> ForgotPassword([FromQuery]string email)
+        {
+            var IsexistUser = db.Users.Where(P => P.email == email.ToLower()).FirstOrDefault();
+        
+            if (IsexistUser != null)
+            {
+                int otp = _userServe.GenerateRandomNo();
+                var newUserOtp = new OtpModel { Expires =  DateTime.Now + new TimeSpan(0, 5, 0) ,Otp=otp,email=IsexistUser.email};
+                await db.OtpModel.AddAsync(newUserOtp);
+                db.SaveChanges();
+
+                string body = $"<div>hi {IsexistUser.userName}<h6></h6><br/><p>We received a request to reset your Cartora app password.\n<br/></p><h4>Your otp is {otp}</h4> </div>";
+               var sendMail= _userServe.Sendmail("Reset Password otp", IsexistUser.email, body);
+
+                return Ok(new ResData<string> { message = "Reset Otp Send to your registered email", status = true ,data= new List<string> {$"{sendMail}" } });
+
+            }
+            return BadRequest(new ResData<string> { message = "User not found", status = false });
+        }
+
+        [HttpPost("ValidateOtp")]
+        public ActionResult<ResData<dynamic>> ValidateOtp(validateotpdto rq )
+        {
+            var isOtp = db.OtpModel.Where(xx => xx.Otp == rq.otp && xx.email == rq.email).FirstOrDefault();
+            if (isOtp != null)
+            {
+                var Res = new ResData<bool> { message = "otp validated", status = true  };
+                Res.data.Add(true);
+                return Ok(Res);
+            }
+
+            else
+            {
+                return NotFound(new ResData<string> { message = "Invalid Otp", status = false });
+            }
+        }
+
+
+        [HttpPost("ChangePassword")]
+        public async Task<ActionResult<ResData<string>>> ChangePassword(changepassDto rq)
+        {
+            var isOtp = db.OtpModel.Where(xx => xx.Otp == rq.otp && xx.email == rq.email).FirstOrDefault();
+            if (isOtp != null)
+            {
+              
+               var user= db.Users.Where(xxx => xxx.email == rq.email).FirstOrDefault();
+                if (user != null)
+                {
+                    var hash = SecurePasswordHasher.Hash(rq.newPsdd);
+                    user.password = hash;
+                    db.Users.Update(user);
+                    await db.SaveChangesAsync();
+                    db.OtpModel.Remove(isOtp);
+                    string body = $"<div>hi {user.userName}<h6></h6><br/><p>Your Cartora Password was changed successfully .\n<br/></p> </div>";
+                    var sendMail = _userServe.Sendmail("Password Change", user.email, body);
+                    return Ok(new ResData<string> { message = "Password change was successfull", status = true });
+                }
+                else
+                {
+                    return NotFound(new ResData<string> { message = "Unable to update Password", status = false });
+                }
+            }
+            else
+            {
+                return NotFound(new ResData<string> { message = "Unable to update Password", status = false });
+            }
         }
 
 

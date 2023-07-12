@@ -8,6 +8,8 @@ namespace cartoraServer.models
         //}
 
         public record aboutmeDto(string aboutme);
+        public record validateotpdto (int otp, string email);
+        public record changepassDto(int otp, string newPsdd,string email);
     }
 }
 

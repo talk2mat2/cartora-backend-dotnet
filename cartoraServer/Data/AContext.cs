@@ -15,6 +15,7 @@ public class AContext:DbContext
     public DbSet<KnightModel> KnightModel { get; set; } = null!;
     public DbSet<LikeModel> LikeModel { get; set; }
     public DbSet<tags> Tags { get; set; }
+    public DbSet<OtpModel> OtpModel { get; set; }
 
     //protected override void OnModelCreating(ModelBuilder modelBuilder)
     //{

@@ -19,7 +19,8 @@ namespace cartoraServer.Helpers
             if (user == null)
             {
                 // not logged in
-                context.Result = new JsonResult(new { message = "Unauthorized or invalid token", status = false, data = new List<String> { } }) { StatusCode = StatusCodes.Status401Unauthorized };
+                //context.HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Result = new JsonResult(new { statusCode = StatusCodes.Status401Unauthorized, message = "Unauthorized or invalid token", status = false, data = new List<String> { } }) { StatusCode = StatusCodes.Status401Unauthorized };
                 //context.Result = new ResData { message = "hekki", status = false } as IActionResult;
             }
         }

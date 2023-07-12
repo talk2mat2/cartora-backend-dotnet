@@ -153,6 +153,7 @@ namespace cartoraServer.Controllers
         }
 
         // DELETE api/values/5
+        [Authorize]
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
@@ -249,7 +250,7 @@ namespace cartoraServer.Controllers
             return Ok(new ResData<UsersProducts>() { data = data, message = "Successfully retrieved", status = true });
         }
 
-
+        [Authorize]
         [HttpPost("deleteProduct/{id}")]
         public async Task<ActionResult<ResData<string>>> DeleteProduct(int id)
         {
@@ -425,8 +426,8 @@ namespace cartoraServer.Controllers
             return StatusCode(200, new ResData<dynamic>() { message = "Successfull", status = false, data = new List<dynamic> { new { count = Data } } });
 
         }
-        [HttpPost("EditProduct/{id}")]
         [Authorize]
+        [HttpPost("EditProduct/{id}")]
         public async Task<ActionResult<ResData<Product>>> EditProduct(int id, [FromForm] ProductsDto request)
         {
             var user = (Users)HttpContext.Items["User"]!;
@@ -507,7 +508,7 @@ namespace cartoraServer.Controllers
             {
                 exitingproduct.description = request.description;
                 exitingproduct.Mediatype = request.Mediatype;
-                exitingproduct.createdAt = new DateTime();
+                exitingproduct.createdAt =DateTime.Now;
                 exitingproduct.Snapshot = Snapshotpath;
                 exitingproduct.Price= request.Price!= exitingproduct.Price ? request.Price: exitingproduct.Price;
                 exitingproduct.frameColors = colors;

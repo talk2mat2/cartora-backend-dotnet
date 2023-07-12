@@ -6,6 +6,11 @@ using System.Security.Claims;
 using System.Text;
 using cartoraServer.Data;
 using Microsoft.Extensions.Options;
+using System.Net;
+//using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace cartoraServer.services
 {
@@ -48,6 +53,55 @@ namespace cartoraServer.services
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
+        }
+
+        public int GenerateRandomNo()
+        {
+            int _min = 1000;
+            int _max = 9999;
+            Random _rdm = new Random();
+            return _rdm.Next(_min, _max);
+        }
+
+
+        public dynamic Sendmail(string subject,string useremail,string body)
+        {
+
+            try
+            {
+
+                var host = "mail.cartoraapp.lat";
+                var port = 8889;
+
+                var username = "support@cartoraapp.lat";
+                var password = "Chibuzo1234@"; 
+
+                var message = new MimeMessage();
+
+                message.From.Add(new MailboxAddress("Cartora Support", "support@cartoraapp.lat"));
+                message.To.Add(new MailboxAddress(useremail, useremail));
+                message.Subject = subject;
+
+                var bodyBuilder = new BodyBuilder();
+                bodyBuilder.HtmlBody = body;
+                message.Body = bodyBuilder.ToMessageBody();
+
+                var client = new SmtpClient();
+
+                client.Connect(host, port, SecureSocketOptions.None);
+                client.Authenticate(username, password);
+
+                client.Send(message);
+                client.Disconnect(true);
+
+                return true;
+            }
+
+            catch (Exception e)
+            {
+                var error = e;
+                return e;
+            }
         }
     }
 }
